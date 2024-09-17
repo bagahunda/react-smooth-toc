@@ -2,6 +2,8 @@ import { EXIT, visit } from 'unist-util-visit'
 import YAML from 'yaml'
 import { create } from 'zustand'
 import { MarkdownRenderer } from '@/markdown-renderer'
+import { mdastExtractHeadings } from '@/utils/mdast-extract-headings'
+import { useTOCStore } from './toc'
 import type { Root as HastRoot } from 'hast'
 import type { Root as MdastRoot } from 'mdast'
 
@@ -37,6 +39,7 @@ export const useContentStore = create<ContentState>(set => ({
         title = frontmatter.title || ''
         return EXIT
       })
+
       set({
         dom: result,
         hast,
@@ -44,6 +47,7 @@ export const useContentStore = create<ContentState>(set => ({
         title,
         lastError: null
       })
+      useTOCStore.getState().update(mdast)
     } catch (error: any) {
       console.error(`Failed to render markdown: ${error.stack}`)
       set({
