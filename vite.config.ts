@@ -1,3 +1,4 @@
+import { fileURLToPath, URL } from 'url'
 import KumaUi from '@kuma-ui/vite'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
@@ -9,5 +10,13 @@ export default defineConfig({
     KumaUi({
       wasm: true
     })
-  ]
+  ],
+  resolve: {
+    alias: [
+      {
+        find: '@',
+        replacement: fileURLToPath(new URL('./src', import.meta.url))
+      }
+    ]
+  }
 })
