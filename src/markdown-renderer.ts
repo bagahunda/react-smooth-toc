@@ -1,11 +1,21 @@
 import * as jsxRuntime from 'react/jsx-runtime'
-import rehype2react from 'rehype-react'
+import rehype2react, { Components as JSXComponents } from 'rehype-react'
 import rehypeSlug from 'rehype-slug'
 import frontMatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkParse from 'remark-parse'
 import remark2rehype from 'remark-rehype'
 import { unified } from 'unified'
+import { createRehypedHeading } from './components/heading'
+
+const rehypeReactComponents: Partial<JSXComponents> = {
+  h1: createRehypedHeading(1),
+  h2: createRehypedHeading(2),
+  h3: createRehypedHeading(3),
+  h4: createRehypedHeading(4),
+  h5: createRehypedHeading(5),
+  h6: createRehypedHeading(6)
+}
 
 export class MarkdownRenderer {
   processor: ReturnType<typeof this.createProcessor> | null = null
@@ -16,14 +26,17 @@ export class MarkdownRenderer {
       .use(remarkGfm)
       .use(frontMatter)
 
-    const rehypeRemark = remarkParser().use(remark2rehype, {
-      allowDangerousHtml: true
-    })
+    const rehypeRemark = remarkParser()
+      .use(remark2rehype, {
+        allowDangerousHtml: true
+      })
+      .use(rehypeSlug)
 
-    const renderer = rehypeRemark.use(rehypeSlug).use(rehype2react, {
+    const renderer = rehypeRemark.use(rehype2react, {
       Fragment: jsxRuntime.Fragment as any,
       jsx: jsxRuntime.jsx as any,
-      jsxs: jsxRuntime.jsxs as any
+      jsxs: jsxRuntime.jsxs as any,
+      components: rehypeReactComponents
     })
 
     this.processor = renderer
