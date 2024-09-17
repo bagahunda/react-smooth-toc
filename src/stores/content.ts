@@ -1,3 +1,5 @@
+import { EXIT, visit } from 'unist-util-visit'
+import YAML from 'yaml'
 import { create } from 'zustand'
 import { MarkdownRenderer } from '@/markdown-renderer'
 import type { Root as HastRoot } from 'hast'
@@ -12,6 +14,7 @@ interface ContentState {
   dom: ContentType | null
   mdast: MdastRoot | null
   hast: HastRoot | null
+  title: string | null
   render: (markdown: string) => Promise<void>
   lastError: Error | null | undefined
 }
@@ -23,14 +26,22 @@ export const useContentStore = create<ContentState>(set => ({
   dom: null,
   mdast: null,
   hast: null,
+  title: null,
   lastError: null,
   render: async (markdown: string) => {
     try {
-      const file = await renderer.render(markdown)
+      const { result, hast, mdast } = await renderer.render(markdown)
+      let title = null
+      visit(mdast, 'yaml', node => {
+        const frontmatter = YAML.parse(node.value)
+        title = frontmatter.title || ''
+        return EXIT
+      })
       set({
-        dom: file.result,
-        hast: file.hast,
-        mdast: file.mdast,
+        dom: result,
+        hast,
+        mdast,
+        title,
         lastError: null
       })
     } catch (error: any) {
@@ -39,6 +50,7 @@ export const useContentStore = create<ContentState>(set => ({
         dom: null,
         hast: null,
         mdast: null,
+        title: null,
         lastError: new Error('Failed to render markdown')
       })
     }
